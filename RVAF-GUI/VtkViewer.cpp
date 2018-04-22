@@ -3,6 +3,7 @@
 
 IMPLEMENT_DYNAMIC(CVtkViewer, CStatic)
 
+
 CVtkViewer::CVtkViewer()
 {
 	//在实例化时需要注意，该视图类在默认情况下渲染的是vtkResliceCursorWidget对象的输出，  
@@ -15,7 +16,24 @@ CVtkViewer::~CVtkViewer()
 {
 }
 
+void CVtkViewer::ReadEularAngle(float a, float b, float c){
+	vtkMydProp *mydprop;
+	mydprop = vtkMydProp::New();
+	mydprop->ReadEularAngle(a, b, c);
+
+	m_Renderer->RemoveActor(actor);
+	m_Renderer->RemoveViewProp(mydprop);
+	m_Renderer->AddViewProp(mydprop);
+	m_Renderer->SetBackground(0, 0, 0);
+	m_Renderer->SetActiveCamera(mydprop->RtCamera);
+	//m_Renderer->ResetCamera();
+	m_RenderWindow->Render();
+
+	return;
+}
+
 void CVtkViewer::ReadPointCloud(std::vector<Pointf>& pointcloud){
+	
 	int n = pointcloud.size();
 	vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
 	points->SetNumberOfPoints(n);
@@ -57,6 +75,8 @@ void CVtkViewer::ReadPointCloud(std::vector<Pointf>& pointcloud){
 	m_Renderer->SetBackground(0, 0, 0);
 	m_Renderer->ResetCamera();
 	m_RenderWindow->Render();
+
+	return;
 
 	// 点云全部显示同样的颜色
 /*	vtkPoints * points = vtkPoints::New();

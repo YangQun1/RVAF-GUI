@@ -306,6 +306,10 @@ BOOL CRVAFGUIDlg::OnInitDialog()
 
 	SetTopButtonLayout();
 
+	cube_a = 0.0f;
+	cube_b = 0.0f;
+	cube_c = 0.0f;
+	showcube = false;
 	hide_vtk = true;
 	m_vtk1.ShowWindow(SW_HIDE);
 	m_vtk2.ShowWindow(SW_HIDE);
@@ -437,7 +441,24 @@ void CRVAFGUIDlg::ReciveDataInterprocess(){
 			x = pBucket->x;
 			y = pBucket->y;
 			z = pBucket->z;
-			pDrawLineDlg->AddPoint(x, y, z);
+			
+			if (pRobotCtrlDlg->active){ // 如果机器人准备或已经连接
+				double db = pRobotCtrlDlg->m_Bstatus - b;
+				b = pRobotCtrlDlg->m_Bstatus + db / 10.0f;
+				a = -a;
+				cube_c = a - 180;
+				cube_b = b;
+				cube_a = c - 180;
+				showcube = true;
+				//pDrawLineDlg->AddPoint(x, y, z);
+				//pDrawLineDlg->AddPointRef(pRobotCtrlDlg->m_Xstatus, pRobotCtrlDlg->m_Ystatus, pRobotCtrlDlg->m_Zstatus);
+				pDrawLineDlg->ComputeError(x, y, z, a, b, c,
+					pRobotCtrlDlg->m_Xstatus, pRobotCtrlDlg->m_Ystatus, pRobotCtrlDlg->m_Zstatus,
+					pRobotCtrlDlg->m_Astatus, pRobotCtrlDlg->m_Bstatus, pRobotCtrlDlg->m_Cstatus, 102.6);
+				
+			} else{
+				pDrawLineDlg->AddPoint(x, y, z);
+			}
 			if (pRobotCtrlDlg->m_checkEnable.GetCheck()){ // 如果勾选了控制机器人抓取
 				RobotFetch(x, y, z, a, b, c);
 				CloseProgram(_T("SVAF.exe"));
@@ -545,7 +566,20 @@ void CRVAFGUIDlg::OnPaint()
 			}
 			
 			CI.StretchBlt(pDC->m_hDC, rect, SRCCOPY);
-
+// add for exp
+			if (showcube){
+				hide_vtk = false;
+				CRect rect;
+				m_zoonDisp3.GetWindowRect(rect);
+				m_zoonDisp3.ShowWindow(SW_HIDE);
+				ScreenToClient(rect);
+				m_vtk1.ReadEularAngle(cube_a, cube_b, cube_c);
+				//m_vtk1.ReadPointCloud(pointclouds[0]);
+				m_vtk1.MoveWindow(rect);
+				m_vtk1.ShowWindow(SW_SHOW);
+				continue; // dont show pc
+			}
+			
 			if (pointclouds.size() > 0){
 				hide_vtk = false;
 				CRect rect;
@@ -557,7 +591,7 @@ void CRVAFGUIDlg::OnPaint()
 				m_vtk1.ShowWindow(SW_SHOW);
 			}
 
-			if (pointclouds.size() == 2){
+			if (pointclouds.size() == 2 && gui_type == svaf::GUIType::FOUR){
 				CRect rect;
 				m_zoonDisp4.GetWindowRect(rect);
 				m_zoonDisp4.ShowWindow(SW_HIDE);
@@ -2412,6 +2446,9 @@ void CRVAFGUIDlg::GenerateProperties(){
 		break;
 	case svaf::PC_REGISTRATION:
 		gui_type = svaf::GUIType::FOUR;
+// add for exp
+		//showcube = true;
+		gui_type = svaf::GUIType::THREE;
 		break;
 	case svaf::PR_CENTER:
 		gui_type = svaf::GUIType::TWO;

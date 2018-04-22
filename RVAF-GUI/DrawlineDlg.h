@@ -15,6 +15,7 @@
 #include "teechart\teepoint3d.h"
 
 #include <list>
+#include "afxwin.h"
 
 // DrawlineDlg dialog
 
@@ -48,10 +49,26 @@ protected:
 	int m_time;
 	int m_pointCount;
 	std::list<Point> points;
+	std::list<Point> pointsRef;
+
+	double m_a, m_b, m_c, m_x, m_y, m_z;
+	double m_ra, m_rb, m_rc, m_rx, m_ry, m_rz;
 
 public:
 	void SetPointCount(int pointcount);
 	void AddPoint(double x, double y, double z);
+	void AddPointRef(double x, double y, double z);
 	void ClearPoint();
+	void ComputeError(double x, double y, double z, double a, double b, double c,
+		double rx, double ry, double rz, double ra, double rb, double rc, double arm = 0.0);
+	void SetPosError(double err);
+	void SetAngError(double err);
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
+	CStatic m_posObj;
+	CStatic m_posRbt;
+	CStatic m_posErr;
+	CStatic m_angObj;
+	CStatic m_angRbt;
+	CStatic m_angErr;
+	afx_msg void OnClickedSaveResult();
 };
